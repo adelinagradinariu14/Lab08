@@ -63,23 +63,30 @@ class Model:
     def __ricorsione(self, sequenza_parziale, giorno, ultimo_distributore, costo_corrente, prezzi_settimana):
         """ Implementa la ricorsione """
         # TODO
-
+        # CASO TERMINALE: ho scelto il distributore per tutti i 7 giorni
         if len(sequenza_parziale) == 7:
-            pass
-        else:
-            # Provo, per questo giorno, ogni distributore possibile (le chiavi sono gli id)
-            for id_distributore in prezzi_settimana:
+            # nuovo "record" se non ce n'è ancora uno (-1) oppure se costa meno del record
+            if self.__costo_ottimo == -1 or costo_corrente < self.__costo_ottimo:
+                self.__costo_ottimo = costo_corrente
+                # list(...) salva una COPIA: la lista originale continuerà a
+                # essere modificata dal backtracking
+                self.__sequenza_ottima = list(sequenza_parziale)
+            return
 
-                # Le liste partono da 0, i giorni da 1: il giorno 1 è la posizione 0.
-                # Costo del giorno = prezzo al litro * 100 litri
-                costo_giorno = prezzi_settimana[id_distributore][giorno - 1] * 100
+        # CASO RICORSIVO: provo ogni distributore per questo giorno
+        for id_distributore in prezzi_settimana:
+            costo_giorno = prezzi_settimana[id_distributore][giorno - 1] * 100
+            if ultimo_distributore is not None and ultimo_distributore != id_distributore:
+                costo_giorno += 5
 
-                # +5€ solo se cambio distributore. Il primo giorno ultimo_distributore
-                # è None: non c'è uno spostamento, quindi niente costo fisso.
-                if ultimo_distributore is not None and ultimo_distributore != id_distributore:
-                    costo_giorno += 5
-
-                # ora scelgo questo distributore, scendo al giorno successivo, poi torno indietro
+            # 1) scelgo questo distributore per oggi
+            sequenza_parziale.append(id_distributore)
+            # 2) scendo al giorno successivo: nuovo giorno, nuovo "ultimo distributore",
+            # costo aggiornato (costo_corrente non lo modifico, passo la somma)
+            self.__ricorsione(sequenza_parziale, giorno + 1, id_distributore,
+                              costo_corrente + costo_giorno, prezzi_settimana)
+            # 3) BACKTRACKING: tolgo la scelta, così al giro dopo provo l'altro distributore
+            sequenza_parziale.pop()
 
     def __get_prezzi_prima_settimana_mese(self, mese: int):
         """
